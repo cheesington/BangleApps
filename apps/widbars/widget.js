@@ -1,6 +1,6 @@
 (() => {
   const h=24, // widget height
-        w=3,  // width of single bar
+        w=6,  // width of single bar
         bars=3; // number of bars
 
   // Note: HRM/temperature are commented out (they didn't seem very useful)
