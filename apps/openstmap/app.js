@@ -30,6 +30,10 @@ if (settings.dirSrc === undefined) {
 
 // Redraw the whole page
 function redraw() {
+  // ensure we do cancel track drawing
+  if (plotTrack && plotTrack.stop)
+    plotTrack.stop();
+  // set clip rect so we don't overwrite widgets
   g.setClipRect(R.x,R.y,R.x2,R.y2);
   const count = m.draw();
   if (checkMapPos && count === 0) {
@@ -264,7 +268,12 @@ function showMap() {
   }, btn: () => showMenu() });
 }
 
-showMap();
+
+if (m.maps.length === 0) {
+  E.showPrompt(/*LANG*/'Please upload a map first.', {buttons : {/*LANG*/"Ok":true}}).then(v => load());
+} else {
+  showMap();
+}
 
 // Write settings on exit via button
 setWatch(() => writeSettings(), BTN, { repeat: true, edge: "rising" });

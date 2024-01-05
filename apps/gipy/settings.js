@@ -3,10 +3,14 @@
     // Load settings
     var settings = Object.assign({
             lost_distance: 50,
+            wake_up_speed: 13,
+            active_time: 10,
             buzz_on_turns: false,
-            disable_bluetooth: true,
+            disable_bluetooth: false,
             brightness: 0.5,
             power_lcd_off: false,
+            powersave_by_default: false,
+            sleep_between_waypoints: false,
         },
         require("Storage").readJSON(FILE, true) || {}
     );
@@ -44,6 +48,24 @@
                 writeSettings();
             },
         },
+        "wake-up speed": {
+            value: settings.wake_up_speed,
+            min: 0,
+            max: 30,
+            onchange: (v) => {
+                settings.wake_up_speed = v;
+                writeSettings();
+            },
+        },
+        "active time": {
+            value: settings.active_time,
+            min: 5,
+            max: 60,
+            onchange: (v) => {
+                settings.active_time = v;
+                writeSettings();
+            },
+        },
         "brightness": {
             value: settings.brightness,
             min: 0,
@@ -62,5 +84,19 @@
                 writeSettings();
             }
         },
+        "powersave by default": {
+            value: settings.powersave_by_default == true,
+            onchange: (v) => {
+                settings.powersave_by_default = v;
+                writeSettings();
+            }
+        },
+        "sleep between waypoints": {
+            value: settings.sleep_between_waypoints == true,
+            onchange: (v) => {
+                settings.sleep_between_waypoints = v;
+                writeSettings();
+            }
+        }
     });
 });

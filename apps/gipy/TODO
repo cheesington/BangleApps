@@ -1,3 +1,10 @@
+
+urgent TODO:
+
+- prefetch tiles ?
+- update documentation to reflect new display ?
+- add an image for the arrow ?
+
 *** thoughts on lcd power ***
 
 so, i tried experimenting with turning the lcd off in order to save power.
@@ -36,10 +43,16 @@ my conclusion is that:
 
 **************************
 
+JIT: array declaration in jit is buggy
+(especially several declarations)
+
+**************************
+
++ try disabling gps for more powersaving
+
 + when you walk the direction still has a tendency to shift
 
 + put back foot only ways
-+ try fiddling with jit
 + put back street names
 + put back shortest paths but with points cache this time and jit
 + how to display paths from shortest path ?
