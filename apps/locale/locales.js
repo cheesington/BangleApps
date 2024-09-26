@@ -61,8 +61,6 @@ timePattern / datePattern:
     %H	hour (00..23)
     %M	minute (00..59)
     %S	second (00..60)
-    %p	locale's equivalent of either AM or PM; blank if not known
-    %P  like %p, but lower case
     
     
 in locales:
@@ -536,7 +534,7 @@ var locales = {
     temperature: '°C',
     ampm: { 0: "öö", 1: "ös" },
     timePattern: { 0: "%HH:%MM:%SS", 1: "%HH:%MM" },
-    datePattern: { 0: "%d %w %Y %A", 1: "%d/%m/%Y" }, // 1 Mart 2020 Pazar // "01/03/2020"
+    datePattern: { 0: "%d %B %Y %A", 1: "%d/%m/%Y" }, // 1 Mart 2020 Pazar // "01/03/2020"
     abmonth: "Oca,Sub,Mar,Nis,May,Haz,Tem,Agu,Eyl,Eki,Kas,Ara",
     month: "Ocak,Subat,Mart,Nisan,Mayis,Haziran,Temmuz,Agustos,Eylul,Ekim,Kasim,Aralik",
     abday: "Paz,Pzt,Sal,Car,Per,Cum,Cmt",

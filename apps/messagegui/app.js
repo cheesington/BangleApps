@@ -24,6 +24,8 @@ require("messages").pushMessage({"t":"add","id":"call","src":"Phone","title":"Bo
 var Layout = require("Layout");
 var layout; // global var containing the layout for the currently displayed message
 var settings = require('Storage').readJSON("messages.settings.json", true) || {};
+var reply;
+try { reply = require("reply"); } catch (e) {}
 var fontSmall = "6x8";
 var fontMedium = g.getFonts().includes("6x15")?"6x15":"6x8:2";
 var fontBig = g.getFonts().includes("12x20")?"12x20":"6x8:2";
@@ -45,6 +47,7 @@ if (Graphics.prototype.setFontIntl) {
 
 var active; // active screen (undefined/"list"/"music"/"map"/"message"/"scroller"/"settings")
 var openMusic = false; // go back to music screen after we handle something else?
+var replying = false; // If we're replying to a message, don't interrupt
 // hack for 2v10 firmware's lack of ':size' font handling
 try {
   g.setFont("6x8:2");
@@ -87,7 +90,7 @@ var onMessagesModified = function(type,msg) {
   }
   if (msg && msg.id=="nav" && msg.t=="modify" && active!="map")
     return; // don't show an updated nav message if we're just in the menu
-  showMessage(msg&&msg.id);
+  showMessage(msg&&msg.id, false);
 };
 Bangle.on("message", onMessagesModified);
 
@@ -254,24 +257,44 @@ function showMessageScroller(msg) {
       g.setFont(bodyFont).setFontAlign(0,-1).drawString(lines[idx], r.x+r.w/2, r.y);
     }, select : function(idx) {
       if (idx>=lines.length-2)
-        showMessage(msg.id);
+        showMessage(msg.id, true);
     },
-    back : () => showMessage(msg.id)
+    back : () => showMessage(msg.id, true)
   });
 }
 
 function showMessageSettings(msg) {
   active = "settings";
   var menu = {"":{"title":/*LANG*/"Message"},
-    "< Back" : () => showMessage(msg.id),
+    "< Back" : () => showMessage(msg.id, true),
     /*LANG*/"View Message" : () => {
       showMessageScroller(msg);
     },
+  };
+
+  if (msg.reply && reply) {
+    menu[/*LANG*/"Reply"] = () => {
+      replying = true;
+      reply.reply({msg: msg})
+        .then(result => {
+          Bluetooth.println(JSON.stringify(result));
+          replying = false;
+          showMessage(msg.id);
+        })
+        .catch(() => {
+          replying = false;
+          showMessage(msg.id);
+        });
+    };
+  }
+
+  menu = Object.assign(menu, {
     /*LANG*/"Delete" : () => {
       MESSAGES = MESSAGES.filter(m=>m.id!=msg.id);
       checkMessages({clockIfNoMsg:0,clockIfAllRead:0,showMsgIfUnread:0,openMusic:0});
     },
-  };
+  });
+
   if (Bangle.messageIgnore && msg.src)
     menu[/*LANG*/"Ignore"] = () => {
       E.showPrompt(/*LANG*/"Ignore all messages from "+E.toJS(msg.src)+"?", {title:/*LANG*/"Ignore"}).then(isYes => {
@@ -304,7 +327,9 @@ function showMessageSettings(msg) {
   E.showMenu(menu);
 }
 
-function showMessage(msgid) {
+function showMessage(msgid, persist) {
+  if (replying) { return; }
+  if(!persist) resetReloadTimeout();
   let idx = MESSAGES.findIndex(m=>m.id==msgid);
   var msg = MESSAGES[idx];
   if (updateLabelsInterval) {
@@ -373,15 +398,32 @@ function showMessage(msgid) {
     }; footer.push({type:"img",src:atob("PhAB4A8AAAAAAAPAfAMAAAAAD4PwHAAAAAA/H4DwAAAAAH78B8AAAAAA/+A/AAAAAAH/Af//////w/gP//////8P4D///////H/Af//////z/4D8AAAAAB+/AfAAAAAA/H4DwAAAAAPg/AcAAAAADwHwDAAAAAA4A8AAAAAAAA=="),col:"#f00",cb:negHandler});
   }
   footer.push({fillx:1}); // push images to left/right
-  if (msg.positive) {
+  if (msg.reply && reply) {
+    posHandler = ()=>{
+      replying = true;
+      msg.new = false;
+      cancelReloadTimeout(); // don't auto-reload to clock now
+      reply.reply({msg: msg})
+        .then(result => {
+          Bluetooth.println(JSON.stringify(result));
+          replying = false;
+          layout.render();
+          checkMessages({clockIfNoMsg:1,clockIfAllRead:1,showMsgIfUnread:1,openMusic:openMusic});
+        })
+        .catch(() => {
+          replying = false;
+          layout.render();
+          showMessage(msg.id);
+        });
+    }; footer.push({type:"img",src:atob("QRABAAAAAAAH//+AAAAABgP//8AAAAADgf//4AAAAAHg4ABwAAAAAPh8APgAAAAAfj+B////////geHv///////hf+f///////GPw///////8cGBwAAAAAPx/gDgAAAAAfD/gHAAAAAA8DngOAAAAABwDHP8AAAAADACGf4AAAAAAAAM/w=="),col:"#0f0", cb:posHandler});
+  }
+  else if (msg.positive) {
     posHandler = ()=>{
       msg.new = false;
       cancelReloadTimeout(); // don't auto-reload to clock now
       Bangle.messageResponse(msg,true);
       checkMessages({clockIfNoMsg:1,clockIfAllRead:1,showMsgIfUnread:1,openMusic:openMusic});
-    };
-        footer.push({type:"img",src:atob("QRABAAAAAAAAAAOAAAAABgAAA8AAAAADgAAD4AAAAAHgAAPgAAAAAPgAA+AAAAAAfgAD4///////gAPh///////gA+D///////AD4H//////8cPgAAAAAAPw8+AAAAAAAfB/4AAAAAAA8B/gAAAAAABwB+AAAAAAADAB4AAAAAAAAABgAA=="),col:"#0f0",cb:posHandler});
-
+    }; footer.push({type:"img",src:atob("QRABAAAAAAAAAAOAAAAABgAAA8AAAAADgAAD4AAAAAHgAAPgAAAAAPgAA+AAAAAAfgAD4///////gAPh///////gA+D///////AD4H//////8cPgAAAAAAPw8+AAAAAAAfB/4AAAAAAA8B/gAAAAAABwB+AAAAAAADAB4AAAAAAAAABgAA=="),col:"#0f0",cb:posHandler});
   }
 
   layout = new Layout({ type:"v", c: [
@@ -409,8 +451,8 @@ function showMessage(msgid) {
   Bangle.swipeHandler = (lr,ud) => {
     if (lr>0 && posHandler) posHandler();
     if (lr<0 && negHandler) negHandler();
-    if (ud>0 && idx<MESSAGES.length-1) showMessage(MESSAGES[idx+1].id);
-    if (ud<0 && idx>0) showMessage(MESSAGES[idx-1].id);
+    if (ud>0 && idx<MESSAGES.length-1) showMessage(MESSAGES[idx+1].id, true);
+    if (ud<0 && idx>0) showMessage(MESSAGES[idx-1].id, true);
   };
   Bangle.on("swipe", Bangle.swipeHandler);
   g.reset().clearRect(Bangle.appRect);
@@ -447,7 +489,7 @@ function checkMessages(options) {
   // If we have a new message, show it
   if (options.showMsgIfUnread && newMessages.length) {
     delete newMessages[0].show; // stop us getting stuck here if we're called a second time
-    showMessage(newMessages[0].id);
+    showMessage(newMessages[0].id, false);
     // buzz after showMessage, so being busy during layout doesn't affect the buzz pattern
     if (global.BUZZ_ON_NEW_MESSAGE) {
       // this is set if we entered the messages app by loading `messagegui.new.js`
@@ -460,7 +502,7 @@ function checkMessages(options) {
   }
   // no new messages: show playing music? Only if we have playing music, or state=="show" (set by messagesmusic)
   if (options.openMusic && MESSAGES.some(m=>m.id=="music" && ((m.track && m.state=="play") || m.state=="show")))
-    return showMessage('music');
+    return showMessage('music', true);
   // no new messages - go to clock?
   if (options.clockIfAllRead && newMessages.length==0)
     return load();
@@ -509,7 +551,7 @@ function checkMessages(options) {
     },
     select : idx => {
       if (idx < MESSAGES.length)
-        showMessage(MESSAGES[idx].id);
+        showMessage(MESSAGES[idx].id, true);
     },
     back : () => load()
   });
@@ -522,6 +564,13 @@ function cancelReloadTimeout() {
   unreadTimeout = undefined;
 }
 
+function resetReloadTimeout(){
+  cancelReloadTimeout();
+  if (!isFinite(settings.unreadTimeout)) settings.unreadTimeout=60;
+  if (settings.unreadTimeout)
+    unreadTimeout = setTimeout(load, settings.unreadTimeout*1000);
+}
+
 g.clear();
 
 Bangle.loadWidgets();
@@ -529,9 +578,6 @@ require("messages").toggleWidget(false);
 Bangle.drawWidgets();
 
 setTimeout(() => {
-  if (!isFinite(settings.unreadTimeout)) settings.unreadTimeout=60;
-  if (settings.unreadTimeout)
-    unreadTimeout = setTimeout(load, settings.unreadTimeout*1000);
   // only openMusic on launch if music is new, or state=="show" (set by messagesmusic)
   var musicMsg = MESSAGES.find(m => m.id === "music");
   checkMessages({
