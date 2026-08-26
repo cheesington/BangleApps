@@ -1,0 +1,19 @@
+{
+  "id": "sailracer",
+  "name": "Sail Race Timer",
+  "shortName": "Race Timer",
+  "version": "0.01",
+  "author": "colinf",
+  "description": "Timer for sailboat race starting sequences",
+  "tags": "tool,outdoors",
+  "supports": ["BANGLEJS", "BANGLEJS2"],
+  "allow_emulator": true,
+  "data": ["sailracer.json", "sailracer.timer.json"],
+  "provides_modules": ["sailracerlib"],
+  "storage": [
+    { "name": "sailracer.app.js", "url": "app.js" },
+    { "name": "sailracer.wid.js", "url": "widget.js" },
+    { "name": "sailracer.img", "url":"app-icon.js", "evaluate":true },
+    { "name": "sailracerlib", "url": "lib.js" }
+  ]
+}
