@@ -1,8 +1,8 @@
 {
   "id": "sailracer",
+  "version": "0.02",
   "name": "Sail Race Timer",
   "shortName": "Race Timer",
-  "version": "0.01",
   "author": "colinf",
   "description": "Timer for sailboat race starting sequences",
   "tags": "tool,outdoors",
