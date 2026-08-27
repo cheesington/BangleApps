@@ -1,11 +1,10 @@
 {
   "id": "sailracer",
-  "version": "0.04",
+  "version": "0.05",
   "name": "Sail Race Timer",
   "author": "cheesington",
   "type": "app",
-  "shortName": "Race Timer",
-  "author": "colinf",
+  "shortName": "Sail Timer",
   "description": "Timer for sailboat race starting sequences",
   "tags": "tool,outdoors",
   "supports": ["BANGLEJS", "BANGLEJS2"],
