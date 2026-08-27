@@ -1,7 +1,9 @@
 {
   "id": "sailracer",
-  "version": "0.02",
+  "version": "0.04",
   "name": "Sail Race Timer",
+  "author": "cheesington",
+  "type": "app",
   "shortName": "Race Timer",
   "author": "colinf",
   "description": "Timer for sailboat race starting sequences",
