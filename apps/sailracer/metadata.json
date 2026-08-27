@@ -10,6 +10,7 @@
   "allow_emulator": true,
   "data": ["sailracer.json", "sailracer.timer.json"],
   "provides_modules": ["sailracerlib"],
+  "icon": "app-icon.png",
   "storage": [
     { "name": "sailracer.app.js", "url": "app.js" },
     { "name": "sailracer.wid.js", "url": "widget.js" },

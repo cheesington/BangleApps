@@ -9,6 +9,7 @@ const COL_BG = "#000000";
 const FONT_SIZE = 100;
 const CENTER_Y = 120;
 const GLYPH_HALF_H = 50;
+const BTN2_HOLD_S = 0.75;
 
 let DURATIONS;
 let durIdx;
@@ -16,6 +17,7 @@ let raceMs;
 let lastStr = "";
 let cells = [];
 let redrawId = null;
+let btn2WatchId = null;
 let w;
 
 function loadConfig() {
@@ -76,6 +78,7 @@ function drawFull(str) {
   for (let i = 0; i < str.length; i++) {
     g.drawString(str[i], cells[i].x + cells[i].w / 2, CENTER_Y);
   }
+  Bangle.drawWidgets();
   lastStr = str;
 }
 
@@ -157,12 +160,22 @@ function onButton(n) {
   }
 }
 
+// setUI's btnRelease option is broken on B1 firmware (it re-invokes btn),
+// so tap-vs-hold on BTN2 is measured with a private both-edge watch:
+// e.lastTime is the time of the press edge.
+function onBtn2(e) {
+  if (!e.state && e.time - e.lastTime < BTN2_HOLD_S) {
+    Bangle.showClock();
+  }
+}
+
 function onRemove() {
   // only the display loop dies here; the widget keeps counting
   if (redrawId) {
     clearTimeout(redrawId);
     redrawId = null;
   }
+  clearWatch(btn2WatchId);
   // allow widget to get garbage collected if necessary after the app is unloaded
   w = null;
 }
@@ -186,6 +199,8 @@ if (!w.isRunning() && w.msLeft() === 0) {
 
 drawFull(lib.timeStr(w.msLeft()));
 refreshNow();
+
+btn2WatchId = setWatch(onBtn2, BTN2, { repeat: true, edge: "both" });
 
 Bangle.setUI({
   mode: "custom",
