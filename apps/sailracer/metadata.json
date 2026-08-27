@@ -8,7 +8,10 @@
   "tags": "tool,outdoors",
   "supports": ["BANGLEJS", "BANGLEJS2"],
   "allow_emulator": true,
-  "data": ["sailracer.json", "sailracer.timer.json"],
+  "data": [
+    {"name": "sailracer.json"},
+    {"name": "sailracer.timer.json"}
+  ],
   "provides_modules": ["sailracerlib"],
   "icon": "app-icon.png",
   "storage": [
