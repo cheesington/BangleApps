@@ -68,6 +68,49 @@ function writeTimerState(state) {
   require("Storage").writeJSON(TIMER_FILE, state);
 }
 
+// Button handling. All state lives at module level so events allocate no
+// closures: each watch callback captures only its index, and the long-press
+// timeout is one shared function whose argument carries the index.
+
+const bIds = [BTN1, BTN2, BTN3, BTN4, BTN5];
+const wIds = new Uint16Array(bIds.length);
+const tIds = new Uint24Array(bIds.length);
+let bh = null; // button handler
+
+function onLong(idx) {
+  tIds[idx] = 0;
+  bh(bIds[idx], 'long');
+}
+
+// 750 ms hold = long press
+function makeWatch(idx) {
+  return setWatch(function(e) {
+    if (e.state) {
+      bh(bIds[idx], 'immediate');
+      tIds[idx] = setTimeout(onLong, 750, idx);
+    } else if (tIds[idx]) {
+      clearTimeout(tIds[idx]);
+      tIds[idx] = 0;
+      bh(bIds[idx], 'short');
+    }
+  }, bIds[idx], {repeat: true, edge: 0});  // 1 rising, 0 both, -1 falling
+}
+
+function buttonHandler(h) {
+  if (bh) throw "Please call buttonHandler() only once";
+  bh = h;
+  for (let i = 0; i < bIds.length; i++) wIds[i] = makeWatch(i);
+}
+
+function buttonCleanup() {
+  for (let i = 0; i < bIds.length; i++) {
+    clearTimeout(tIds[i]);
+    clearWatch(wIds[i]);
+  }
+  bh = null;
+}
+
+
 module.exports = {
   CFG_FILE: CFG_FILE,
   DEFAULT_DURATIONS: DEFAULT_DURATIONS,
@@ -77,6 +120,8 @@ module.exports = {
   timeStr: timeStr,
   nextSecondDelay: nextSecondDelay,
   buzzFor: buzzFor,
+  buttonHandler: buttonHandler,
+  buttonCleanup: buttonCleanup,
   sleep: sleep,
   buzzTimes: buzzTimes,
   readTimerState: readTimerState,
