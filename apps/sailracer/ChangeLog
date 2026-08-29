@@ -2,3 +2,5 @@
 0.07: Removed Bangle 2 support till it's tested properly
 0.08: Fixed icon transparency
 0.09: Reworked button handling into a shared library (immediate/short/long events on all five buttons); BTN2 short press exits to clock, BTN3 long press opens the launcher
+0.10: Short presses report hold duration; round-to-minute uses the press time, not release
+0.11: Long presses report hold duration as well

@@ -80,9 +80,11 @@
       persist();
     },
 
-    roundRemaining() {
+    roundRemaining(holdMs) {
       if (!running) return;
-      remainMs = Math.max(0, endMs - Date.now());
+      // anchor to the press, not the release
+      const press = Date.now() - holdMs;
+      remainMs = Math.max(0, endMs - press);
 
       // don't round down to finish
       if (remainMs < 30 * 1000) {
@@ -91,7 +93,7 @@
 
       // round remainMs to the nearest minute
       remainMs = Math.round(remainMs / 60000) * 60000;
-      endMs = Date.now() + remainMs;
+      endMs = press + remainMs;
 
       persist();
       scheduleTick();

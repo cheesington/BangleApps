@@ -144,9 +144,9 @@ function resetTimer() {
   refreshNow();
 }
 
-function onButton(button, event) {
+function onButton(button, event, holdMs) {
   switch (button) {
-    case BTN1: 
+    case BTN1:
       if (event === "immediate") {
         onStartStop();
       }
@@ -161,7 +161,7 @@ function onButton(button, event) {
     case BTN3:
       if (event === "short") {
         if (w.isRunning()) {
-          w.roundRemaining();
+          w.roundRemaining(holdMs);
           refreshNow();
         } else {
           resetTimer();

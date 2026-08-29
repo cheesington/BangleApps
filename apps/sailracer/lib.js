@@ -71,27 +71,29 @@ function writeTimerState(state) {
 // Button handling. All state lives at module level so events allocate no
 // closures: each watch callback captures only its index, and the long-press
 // timeout is one shared function whose argument carries the index.
+// The handler is called as bh(button, event, holdMs): holdMs is the hold
+// duration in ms so far - real for 'short' and 'long', 0 for 'immediate'.
 
 const bIds = [BTN1, BTN2, BTN3, BTN4, BTN5];
 const wIds = new Uint16Array(bIds.length);
 const tIds = new Uint24Array(bIds.length);
 let bh = null; // button handler
 
-function onLong(idx) {
+function onLong(idx, press) {
   tIds[idx] = 0;
-  bh(bIds[idx], 'long');
+  bh(bIds[idx], 'long', Math.round((getTime() - press) * 1000));
 }
 
 // 750 ms hold = long press
 function makeWatch(idx) {
   return setWatch(function(e) {
     if (e.state) {
-      bh(bIds[idx], 'immediate');
-      tIds[idx] = setTimeout(onLong, 750, idx);
+      bh(bIds[idx], 'immediate', 0);
+      tIds[idx] = setTimeout(onLong, 750, idx, e.time);
     } else if (tIds[idx]) {
       clearTimeout(tIds[idx]);
       tIds[idx] = 0;
-      bh(bIds[idx], 'short');
+      bh(bIds[idx], 'short', Math.round((e.time - e.lastTime) * 1000));
     }
   }, bIds[idx], {repeat: true, edge: 0});  // 1 rising, 0 both, -1 falling
 }
