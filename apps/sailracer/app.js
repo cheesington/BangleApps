@@ -145,17 +145,31 @@ function resetTimer() {
 }
 
 function onButton(button, event) {
-  if (button === BTN1 && event === "immediate") {
-    onStartStop();
-  } else if (button === BTN3 && event === "immediate") {
-    if (w.isRunning()) {
-      w.roundRemaining();
-      refreshNow();
-    } else {
-      resetTimer();
-    }
-  } else if (button === BTN2 && event === "short") {
-    Bangle.showClock();
+  switch (button) {
+    case BTN1: 
+      if (event === "immediate") {
+        onStartStop();
+      }
+      break;
+    case BTN2:
+      if (event === "short") {
+        Bangle.showClock();
+      } else if (event === "long") {
+        // enter timer setting mode
+      }
+      break;
+    case BTN3:
+      if (event === "short") {
+        if (w.isRunning()) {
+          w.roundRemaining();
+          refreshNow();
+        } else {
+          resetTimer();
+        }
+      } else if (event === "long") {
+        Bangle.showLauncher();
+      }
+      break;
   }
 }
 
